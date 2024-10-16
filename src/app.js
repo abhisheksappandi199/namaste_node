@@ -1,74 +1,22 @@
 const express = require('express');
+const { adminAuth, userAuth } = require('./middlewares/auth');
 
 const app = express();
 
-app.use('/', (req, res, next) => {
-  // do something before sending response -> middleware chain
-  console.log('initial /');
-  
-  next()
-})
+app.use('/admin', adminAuth)
 
-app.use('/user',
-  (req, res, next) => {
-    console.log('response 1');
-    // res.send('response 1');
-    next();
-})
+app.get('/login', (req, res, next) => {
+  res.send('login success');
+});
 
-app.use('/user',
-  (req, res, next) => {
-    console.log('response 2');
-    res.send('response 2');
-    // next();
-})
+app.get('/admin/getDetails', (req, res, next) => {
+  res.send('all data sent')
+});
 
-
-
-
-
-
-
-// ----------------------------------------------------------------
-// app.use('/user', ()=>{}, [()=>{},()=>{}], ()=>{},) // works with all array and independent
-
-// app.use('/user',
-//   (req, res, next) => {
-//     console.log('response 1');
-//     // res.send('response 1');
-//     next();
-// }, (req, res,next) => {
-//   console.log('response 2');
-//   // res.send('response 2');
-//   next()
-// },(req, res, next) => {
-//   console.log('response 3');
-//   // res.send('response 3');
-//   next()
-// },(req, res) => {
-//   console.log('response 4');
-//   res.send('response 4');
-// })
+app.get('/user/getDetails', userAuth, (req, res, next) => {
+  res.send('all user data sent')
+});
 
 app.listen(4000, () => {
   console.log('server is listerning on port 4000');
 });
-
-// app.get('/user', (req, res) => {
-//   res.send({name: 'abhi', age: '27'})
-// })
-
-// app.post('/user', (req, res) => {
-//   res.send('saved in the DB')
-// })
-
-// app.delete('/user', (req, res) => {
-//   res.send('removed in the DB')
-// })
-
-// this will match all the HTTP methods API calls to /test
-app.use("/test",(req, res) => {
-  res.send('test from server')
-})
-
-console.log('hi there');
