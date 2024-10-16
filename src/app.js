@@ -1,22 +1,16 @@
 const express = require('express');
+const { connectDB } = require('./config/database');
 const app = express();
 
-app.use('/', (err,req, res, next) => {
-  res.status(500).send('something went wrong')  
-})
-
-app.get('/userError', (req, res, next) => {
-  try {
-
-    throw new Error
-  }
-  catch (err) {
-    res.send('error occured')
-  }
-});
+connectDB()
+  .then(() => {
+    console.log('DB connect sucessfully..!');
+    app.listen(4000, () => {
+      console.log('server is listerning on port 4000');
+    });
+  })
+  .catch(err => {
+  console.log("🚀 ~ failed to connect to DB");
+  })
 
 
-
-app.listen(4000, () => {
-  console.log('server is listerning on port 4000');
-});
