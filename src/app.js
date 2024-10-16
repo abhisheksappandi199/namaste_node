@@ -2,6 +2,13 @@ const express = require('express');
 
 const app = express();
 
+app.use('/', (req, res, next) => {
+  // do something before sending response -> middleware chain
+  console.log('initial /');
+  
+  next()
+})
+
 app.use('/user',
   (req, res, next) => {
     console.log('response 1');
