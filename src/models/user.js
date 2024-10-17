@@ -1,11 +1,11 @@
-const { type } = require('express/lib/response');
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true,
-    minlenght: 1,
+    minlength: 1,
     maxlength: 50,
   },
   lastName: {
@@ -17,10 +17,20 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
+    validate(value) {
+      if(!validator.isEmail(value)) {
+        throw new Error("Invalid email: " + value);
+      }
+    }
   },
   password: {
     type: String,
     required: true,
+    validate(value) {
+      if(!validator.isStrongPassword(value)) {
+        throw new Error("Enter strong password: " + value);
+      }
+    }
   },
   age: {
     type: Number,
@@ -36,7 +46,12 @@ const userSchema = new mongoose.Schema({
   },
    photoUrl: {
     type: String,
-    default: 'https://www.pngfind.com/mpng/TRJxwTh_default-profile-picture-transparent-hd-png-download/'
+    default: 'https://www.pngfind.com/mpng/TRJxwTh_default-profile-picture-transparent-hd-png-download/',
+    validate(value) {
+      if(!validator.isURL(value)) {
+        throw new Error("Enter a valid url" + value);
+      }
+    }
    },
    about: {
     type: String,

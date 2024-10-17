@@ -11,13 +11,14 @@ app.use(express.json());
 app.post('/signup', async (req, res) => {
   // creating the new instance of the User Modal
   const user = new User(req.body);
+  console.log("🚀 ~ app.post ~ user:", user)
   try {
     await user.save();
     res.send('user save in DB ')
     console.log('User saved sucessfully');
   }
   catch (err) {
-    res.send('error occured')
+    res.send('error occured in signup: ' + err.message)
   }
 })
 
@@ -55,7 +56,7 @@ app.delete('/user', async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.body.userId);
     if(!user) {
-      res.send(404).send('user not found')
+      res.status(404).send('user not found')
     } else {
       res.send('deleted sucessfully')
     }
@@ -71,7 +72,6 @@ app.patch('/user/:userId', async (req, res) => {
   const userData = req.body
 
   try {
-
     const editableItems = ["age", "photoUrl","skills", "about"]
     const isEditable = Object.keys(editableItems).every(item => editableItems?.includes(item))
     if(!isEditable) {
