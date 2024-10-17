@@ -1,7 +1,8 @@
 const express = require('express');
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
-const req = require('express/lib/request');
+const { signUpValidator } = require('./utils/validator');
+const bcrypt = require('bcrypt');
 const app = express();
 
 // thios is the middleware prodided by express to convert json into JS object
@@ -9,10 +10,20 @@ app.use(express.json());
 
 // POST for signup
 app.post('/signup', async (req, res) => {
-  // creating the new instance of the User Modal
-  const user = new User(req.body);
-  console.log("🚀 ~ app.post ~ user:", user)
+
   try {
+    // add a signup validator fnuction before saving
+    const { firstName, lastName, emailId, password } = req?.body
+    signUpValidator(req);
+  
+    // create a hash for the pwd before saving
+    const hashPassword = await bcrypt.hash(password, 10)
+  
+    // creating the new instance of the User Modal
+    const user = new User({
+      firstName, lastName, emailId, password: hashPassword
+    });
+
     await user.save();
     res.send('user save in DB ')
     console.log('User saved sucessfully');
