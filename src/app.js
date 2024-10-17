@@ -33,6 +33,27 @@ app.post('/signup', async (req, res) => {
   }
 })
 
+// POST for login
+app.post('/login', async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    const user = await User.findOne({ emailId: emailId });
+    if(!user) {
+      throw new Error('invalid email / password');
+    }
+    const isValid = await bcrypt.compare(password, user.password);
+
+    if(isValid) {
+      res.send('success is successful');
+    } else {
+      throw new Error('invalid email / password');
+    }
+  } 
+  catch (err) {
+    res.send('error occured in signup: ' + err.message)
+  }
+})
 
 // GET user by FirstName
 app.get('/user', async (req, res) => {
