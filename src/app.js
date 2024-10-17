@@ -66,10 +66,18 @@ app.delete('/user', async (req, res) => {
 })
 
 // patch the user based on id
-app.patch('/user', async (req, res) => {
-  const user = req.body.userId
+app.patch('/user/:userId', async (req, res) => {
+  const user = req.params?.userId
   const userData = req.body
+
   try {
+
+    const editableItems = ["age", "photoUrl","skills", "about"]
+    const isEditable = Object.keys(editableItems).every(item => editableItems?.includes(item))
+    if(!isEditable) {
+      throw new Error("the field is not editable");
+    }
+
     const updatedUser = await User.findByIdAndUpdate({_id: user}, userData, {runValidators: true})
     if(!updatedUser) {
       res.send(404).send('user not found')
@@ -78,7 +86,7 @@ app.patch('/user', async (req, res) => {
     }
   } 
   catch (err) { 
-    res.status(500).send('error occured' + err.message)
+    res.status(500).send('error occured: ' + err.message)
   }
 })
 
