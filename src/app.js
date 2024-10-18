@@ -1,12 +1,19 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const jwt =require('jsonwebtoken');
+
+
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
 const { signUpValidator } = require('./utils/validator');
-const bcrypt = require('bcrypt');
+
 const app = express();
 
 // thios is the middleware prodided by express to convert json into JS object
 app.use(express.json());
+// use to parse the cookie else give undefined
+app.use(cookieParser());
 
 // POST for signup
 app.post('/signup', async (req, res) => {
@@ -45,6 +52,9 @@ app.post('/login', async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password);
 
     if(isValid) {
+      const token = jwt.sign({_id: user?._id}, 'Abhishek')
+
+      res.cookie('token', token)
       res.send('success is successful');
     } else {
       throw new Error('invalid email / password');
@@ -52,6 +62,29 @@ app.post('/login', async (req, res) => {
   } 
   catch (err) {
     res.send('error occured in signup: ' + err.message)
+  }
+})
+
+// GET profile 
+app.get('/profile', async (req, res) => {
+  try{
+    const token = req.cookies.token;
+    console.log("🚀 ~ app.get ~ token:", token)
+    const isTokenValid = jwt.verify(token, 'Abhishek');
+    console.log("🚀 ~ app.get ~ isTokenValid:", isTokenValid)
+    if(!isTokenValid) {
+      throw new Error('Invalid token');
+    }
+    const user = await User.findOne({_id: isTokenValid?._id})
+
+    if(!user) {
+      throw new Error('User not found');
+    }
+
+    res.send(user);
+  }
+  catch (err) {
+    res.send('error occured getting profile: ' + err.message)
   }
 })
 
