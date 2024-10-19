@@ -7,6 +7,7 @@ const jwt =require('jsonwebtoken');
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
 const { signUpValidator } = require('./utils/validator');
+const { userAuth } = require('./middlewares/auth');
 
 const app = express();
 
@@ -52,9 +53,9 @@ app.post('/login', async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password);
 
     if(isValid) {
-      const token = jwt.sign({_id: user?._id}, 'Abhishek')
+      const token = jwt.sign({_id: user?._id}, 'Abhishek', {expiresIn: '0d'})
 
-      res.cookie('token', token)
+      res.cookie('token', token, { expires: new Date(Date.now() + 900000)})
       res.send('success is successful');
     } else {
       throw new Error('invalid email / password');
@@ -66,22 +67,20 @@ app.post('/login', async (req, res) => {
 })
 
 // GET profile 
-app.get('/profile', async (req, res) => {
+app.get('/profile', userAuth, async (req, res) => {
   try{
-    const token = req.cookies.token;
-    console.log("🚀 ~ app.get ~ token:", token)
-    const isTokenValid = jwt.verify(token, 'Abhishek');
-    console.log("🚀 ~ app.get ~ isTokenValid:", isTokenValid)
-    if(!isTokenValid) {
-      throw new Error('Invalid token');
-    }
-    const user = await User.findOne({_id: isTokenValid?._id})
+    res.send(req.user);
+  }
+  catch (err) {
+    res.send('error occured getting profile: ' + err.message)
+  }
+})
 
-    if(!user) {
-      throw new Error('User not found');
-    }
-
-    res.send(user);
+// POST connectRequest 
+app.post('/sendConnectionRequest', userAuth, async (req, res) => {
+  try{
+    // res.send(req.user);
+    res.send(req?.user?.firstName + ' has send the connection request');
   }
   catch (err) {
     res.send('error occured getting profile: ' + err.message)
@@ -100,64 +99,6 @@ app.get('/user', async (req, res) => {
   } catch (err) {
     res.status(404).send('something went wromg')
   }
-})
-
-// GET Feed api - get all useers fron DB
-app.get('/feed', async (req, res) => {
-  try {
-    const user = await User.find();
-    if(!user) {
-      res.status(404).send('user not found')
-    } else {
-      res.send(user)
-    }
-  } catch (err) {
-    res.status(404).send('something went wromg')
-  }
-})
-
-// DELETE user based on id
-app.delete('/user', async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.body.userId);
-    if(!user) {
-      res.status(404).send('user not found')
-    } else {
-      res.send('deleted sucessfully')
-    }
-  }
-  catch (err) {
-    res.status(404).send('error occured!');
-  }
-})
-
-// patch the user based on id
-app.patch('/user/:userId', async (req, res) => {
-  const user = req.params?.userId
-  const userData = req.body
-
-  try {
-    const editableItems = ["age", "photoUrl","skills", "about"]
-    const isEditable = Object.keys(editableItems).every(item => editableItems?.includes(item))
-    if(!isEditable) {
-      throw new Error("the field is not editable");
-    }
-
-    const updatedUser = await User.findByIdAndUpdate({_id: user}, userData, {runValidators: true})
-    if(!updatedUser) {
-      res.send(404).send('user not found')
-    } else {
-      res.send('updated sucessfully')
-    }
-  } 
-  catch (err) { 
-    res.status(500).send('error occured: ' + err.message)
-  }
-})
-
-// used for err handling for the whole application
-app.use('/', (err, req, res, next) => {
-    res.status(500).send("something went wrong");
 })
 
 connectDB()

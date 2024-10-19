@@ -12,3 +12,61 @@ app.get('/userError', (req, res, next) => {
     res.send('error occured')
   }
 });
+
+// GET Feed api - get all useers fron DB
+app.get('/feed', async (req, res) => {
+  try {
+    const user = await User.find();
+    if(!user) {
+      res.status(404).send('user not found')
+    } else {
+      res.send(user)
+    }
+  } catch (err) {
+    res.status(404).send('something went wromg')
+  }
+})
+
+// DELETE user based on id
+app.delete('/user', async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.body.userId);
+    if(!user) {
+      res.status(404).send('user not found')
+    } else {
+      res.send('deleted sucessfully')
+    }
+  }
+  catch (err) {
+    res.status(404).send('error occured!');
+  }
+})
+
+// patch the user based on id
+app.patch('/user/:userId', async (req, res) => {
+  const user = req.params?.userId
+  const userData = req.body
+
+  try {
+    const editableItems = ["age", "photoUrl","skills", "about"]
+    const isEditable = Object.keys(editableItems).every(item => editableItems?.includes(item))
+    if(!isEditable) {
+      throw new Error("the field is not editable");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate({_id: user}, userData, {runValidators: true})
+    if(!updatedUser) {
+      res.send(404).send('user not found')
+    } else {
+      res.send('updated sucessfully')
+    }
+  } 
+  catch (err) { 
+    res.status(500).send('error occured: ' + err.message)
+  }
+})
+
+// used for err handling for the whole application
+app.use('/', (err, req, res, next) => {
+    res.status(500).send("something went wrong");
+})
