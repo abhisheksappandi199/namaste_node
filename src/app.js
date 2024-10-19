@@ -2,8 +2,6 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 
-
-
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
 const { signUpValidator } = require('./utils/validator');
@@ -16,75 +14,14 @@ app.use(express.json());
 // use to parse the cookie else give undefined
 app.use(cookieParser());
 
-// POST for signup
-app.post('/signup', async (req, res) => {
 
-  try {
-    // add a signup validator fnuction before saving
-    const { firstName, lastName, emailId, password } = req?.body
-    signUpValidator(req);
-  
-    // create a hash for the pwd before saving
-    const hashPassword = await bcrypt.hash(password, 10)
-  
-    // creating the new instance of the User Modal
-    const user = new User({
-      firstName, lastName, emailId, password: hashPassword
-    });
+const { authRouter } = require('./routes/auth');
+const { profileRouter } = require('./routes/profile');
+const { requestRouter } = require('./routes/request');
 
-    await user.save();
-    res.send('user save in DB ')
-    console.log('User saved sucessfully');
-  }
-  catch (err) {
-    res.send('error occured in signup: ' + err.message)
-  }
-})
-
-// POST for login
-app.post('/login', async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-
-    const user = await User.findOne({ emailId: emailId });
-    if(!user) {
-      throw new Error('invalid email / password');
-    }
-    const isValid = await user.validatePassword(password);
-
-    if(isValid) {
-      const token = await user.getJWT();
-      res.cookie('token', token, { expires: new Date(Date.now() + 900000)})
-      res.send('success is successful');
-    } else {
-      throw new Error('invalid email / password');
-    }
-  } 
-  catch (err) {
-    res.send('error occured in signup: ' + err.message)
-  }
-})
-
-// GET profile 
-app.get('/profile', userAuth, async (req, res) => {
-  try{
-    res.send(req.user);
-  }
-  catch (err) {
-    res.send('error occured getting profile: ' + err.message)
-  }
-})
-
-// POST connectRequest 
-app.post('/sendConnectionRequest', userAuth, async (req, res) => {
-  try{
-    // res.send(req.user);
-    res.send(req?.user?.firstName + ' has send the connection request');
-  }
-  catch (err) {
-    res.send('error occured getting profile: ' + err.message)
-  }
-})
+app.use('/', authRouter);
+app.use('/', profileRouter);
+app.use('/', requestRouter);
 
 // GET user by FirstName
 app.get('/user', async (req, res) => {
