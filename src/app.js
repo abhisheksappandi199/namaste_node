@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
-const jwt =require('jsonwebtoken');
+
 
 
 const { connectDB } = require('./config/database');
@@ -50,11 +50,10 @@ app.post('/login', async (req, res) => {
     if(!user) {
       throw new Error('invalid email / password');
     }
-    const isValid = await bcrypt.compare(password, user.password);
+    const isValid = await user.validatePassword(password);
 
     if(isValid) {
-      const token = jwt.sign({_id: user?._id}, 'Abhishek', {expiresIn: '0d'})
-
+      const token = await user.getJWT();
       res.cookie('token', token, { expires: new Date(Date.now() + 900000)})
       res.send('success is successful');
     } else {
