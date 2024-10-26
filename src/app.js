@@ -9,7 +9,7 @@ const { userAuth } = require('./middlewares/auth');
 
 const app = express();
 
-// thios is the middleware prodided by express to convert json into JS object
+// this is the middleware prodided by express to convert json into JS object
 app.use(express.json());
 // use to parse the cookie else give undefined
 app.use(cookieParser());
@@ -18,10 +18,12 @@ app.use(cookieParser());
 const { authRouter } = require('./routes/auth');
 const { profileRouter } = require('./routes/profile');
 const { requestRouter } = require('./routes/request');
+const { UserRouter } = require('./routes/user');
 
 app.use('/', authRouter);
 app.use('/', profileRouter);
 app.use('/', requestRouter);
+app.use('/', UserRouter);
 
 // GET user by FirstName
 app.get('/user', async (req, res) => {
