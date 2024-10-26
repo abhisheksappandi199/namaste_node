@@ -22,7 +22,6 @@ authRouter.post('/signup', async (req, res) => {
 
     await user.save();
     res.send('user save in DB ')
-    console.log('User saved sucessfully');
   }
   catch (err) {
     res.send('error occured in signup: ' + err.message)

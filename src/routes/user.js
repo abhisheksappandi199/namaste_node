@@ -3,14 +3,14 @@ const UserRouter = express.Router();
 
 const { userAuth } = require('../middlewares/auth');
 const { ConnectionRequest } = require('../models/connectionRequest');
+const { User } = require('../models/user');
 
-const USER_SAFE_DATA = "firstName LastName emal"
+const USER_SAFE_DATA = "firstName lastName email"
 
 // GET all the penging connection request from the loggedIn user
 UserRouter.get('/user/request/received', userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
-    console.log("🚀 ~ UserRouter.get ~ loggedInUser:", loggedInUser._id)
 
     const connectionRequest = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
@@ -55,6 +55,39 @@ UserRouter.get("/user/connections", userAuth, async (req, res) => {
   }
 })
 
+UserRouter.get('/feed', userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    const connectionRequest = await ConnectionRequest.find({
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }]
+    }).select('fromUserId toUserId');
+
+    const hideUserFromFeed = new Set();
+
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    limit = limit > 50 ? 50 : limit
+
+    connectionRequest.forEach(user => {
+      hideUserFromFeed.add(user?.fromUserId.toString())
+      hideUserFromFeed.add(user?.toUserId.toString())
+    })
+
+    const user = await User.find({
+      $and: [
+        { _id: { $nin: Array.from(hideUserFromFeed) }},
+        { _id: { $ne: loggedInUser._id }}
+      ]
+    }).select(USER_SAFE_DATA).skip(skip).limit(limit)
+
+    res.json({ data: user })
+  } 
+  catch (err) {
+    res.status(404).send('ERROR : '+ err.message);
+  }
+})
 
 module.exports = {
   UserRouter
